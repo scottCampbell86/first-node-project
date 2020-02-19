@@ -6,9 +6,14 @@
   "directories": {
     "test": "test"
   },
+  
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "eslint .",
+    "test": "jest --detectOpenHandles",
+    "start": "node server.js",
+    "start:watch": "nodemon server.js" 
   },
+
   "repository": {
     "type": "git",
     "url": "git+https://github.com/scottCampbell86/first-node-project.git"
