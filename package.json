@@ -6,14 +6,12 @@
   "directories": {
     "test": "test"
   },
-
   "scripts": {
     "lint": "eslint .",
     "test": "jest --detectOpenHandles",
-    "start": "node server.js",
-    "start:watch": "nodemon server.js" 
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
-
   "repository": {
     "type": "git",
     "url": "git+https://github.com/scottCampbell86/first-node-project.git"
