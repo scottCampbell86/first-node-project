@@ -73,9 +73,27 @@ app.get('/event', async(req, res, next) => {
     }
 });
 
+const getHikingData = async(lat, lng) => { 
+    const URL = `https://www.hikingproject.com/data/get-trails?lat=40.0274&lon=-105.2519&maxDistance=10&key=${process.env.HIKING_KEY}`;
+    const hikeData = await request.get(URL);
+    const nearbyHikes = json.parse(hikeData.body);
 
+    return nearbyHikes.trails.map(hike => {
+        return {
+            name: hike.name,
+            location: hike.location,
+            length: hike.length,
+            stars: hike.stars,
+            star_votes: hike.star_votes,
+            summary: hike.summary,
+            trail_url: hike.url,
+            conditions: hike.conditionDetails
+            condition_date: hike.conditionDate
+            condition_time: hike.conditionDate
+        };
+    });
 
-
+};
 
 
 
