@@ -1,53 +1,54 @@
 const express = require('express');
-const app = express();
-//const request = require('request');
-const geoData = require('./data/geo.js');
-const weather = require('./data/darksky.js');
+const request = require('superagent');
 const cors = require('cors');
+const app = express();
+
 
 app.use(cors());
 
-//initialize state variables
 let lng;
 let lat;
 
-app.get('/location/', (request, response) => {
-    //const location = request.query.search;
-    const cityData = geoData.results[0];
-    lat = cityData.geometry.location.lat,
-    lng = cityData.geometry.location.lng,
-    response.json({
+app.get('/location', async(req, res, next) => {
+    try { 
+        const location = req.query.search;
+        const URL = `https://us1.locationiq.com/v1/search.php?key=${process.env.GEOCODE_API_KEY}&q=${location}&format=json`;
+        const cityData = await request.get(URL);
+        const firstResult = cityData.body[0];
         
-        name: request.query.name,
-        formatted_query: cityData.formatted_address,
-        //in 23 and 24 we set state
-        latitude: cityData.geometry.location.lat,
-        longitude: cityData.geometry.location.lng
-    });
+        lat = firstResult.lat,
+        lng = firstResult.lon,
+
+        res.json({
+            formatted_query: firstResult.display_name,
+            latitude: lat,
+            longitude: lng
+        });
+    } catch (err) {
+        next(err);
+    }   
 });
 
-//eventually this will be replaced by an API call
-    // will need lat/lon though
-let getWeatherData = (lat, lng) => {
-    return weather.daily.data.map(forecast => {
+let getWeatherData = async(lat, lng) => {
+    const weather = await request.get(`https://api.darksky.net/forecast/${process.env.WEATHER_KEY}/${lat},${lng}`);
+    return weather.body.daily.data.map(forecast => {
         return {
             forecast: forecast.summary,
-            time: new Date(forecast.time * 1000)
+            time: new Date(forecast.time * 1000),
         };
     });
 };
 
-app.get('/weather', (request, response) => {
-    let portlandWeather = getWeatherData(lat, lng);
-    response.json(portlandWeather);
+app.get('/weather', async(req, res, next) => {
+    try {
+        let portlandWeather = await getWeatherData(lat, lng);
+        res.json(portlandWeather); 
+    } catch (err) {
+        next(err);
+    }
 });
-//app.listen(3000, () => { console.log('running . . .')});
 
-app.get('*', (request, response ) => {
-    request.send({
-        uhOh: '404'
-    });
-});
+app.get('*', (req, res) => res.send('404'));
 
 module.exports = {
     app: app,
