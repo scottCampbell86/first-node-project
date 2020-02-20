@@ -29,7 +29,7 @@ app.get('/location', async(req, res, next) => {
     }   
 });
 
-let getWeatherData = async(lat, lng) => {
+const getWeatherData = async(lat, lng) => {
     const weather = await request.get(`https://api.darksky.net/forecast/${process.env.WEATHER_KEY}/${lat},${lng}`);
     return weather.body.daily.data.map(forecast => {
         return {
@@ -38,7 +38,6 @@ let getWeatherData = async(lat, lng) => {
         };
     });
 };
-
 app.get('/weather', async(req, res, next) => {
     try {
         let portlandWeather = await getWeatherData(lat, lng);
@@ -47,7 +46,6 @@ app.get('/weather', async(req, res, next) => {
         next(err);
     }
 });
-
 const getEventData = async(lat, lng) => {
     const URL = `http://api.eventful.com/json/events/search?app_key=${process.env.EVENTFUL_KEY}&where=${lat},${lng}&within=25&page_size=20&page_number=1`;
     const eventData = await request.get(URL);
@@ -56,14 +54,13 @@ const getEventData = async(lat, lng) => {
 
     return nearbyEvents.events.event.map(event => {
         return {
-            link : event.url,
-            name : event.title,
-            event_date : event.start_time,
-            summary : event.description,
+            link: event.url,
+            name: event.title,
+            event_date: event.start_time,
+            summary: event.description,
         };
     });
 };
-
 app.get('/event', async(req, res, next) => {
     try {
         let userEvent = await getEventData(lat, lng);
@@ -76,9 +73,10 @@ app.get('/event', async(req, res, next) => {
 const getHikingData = async(lat, lng) => { 
     const URL = `https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lng}&maxDistance=10&key=${process.env.HIKING_KEY}`;
     const hikeData = await request.get(URL);
-    const nearbyHikes = hikeData.body;
+    const nearbyHikes = hikeData.body.trails;
+    //const hikeKeys = Object.keys(nearbyHikes);
 
-    return nearbyHikes.trails.map(hike => {
+    return nearbyHikes.map(hike => {
         return {
             name: hike.name,
             location: hike.location,
@@ -87,9 +85,9 @@ const getHikingData = async(lat, lng) => {
             star_votes: hike.star_votes,
             summary: hike.summary,
             trail_url: hike.url,
-            conditions: hike.conditionDetails,
-            condition_date: hike.conditionDate,
-            condition_time: hike.conditionDate
+            conditionDetails: hike.conditionDetails,
+            condition_date: new Date(nearbyHikes.time * 1000),
+            condition_time: new Date(nearbyHikes.time * 1000)
         };
     });
 
@@ -98,7 +96,7 @@ const getHikingData = async(lat, lng) => {
 app.get('/trails', async(req, res, next) => {
     try {
         let userHike = await getHikingData(lat, lng);
-        res.json(userHike); 
+        res.json(userHike);
     } catch (err) {
         next(err);
     }
