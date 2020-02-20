@@ -74,9 +74,9 @@ app.get('/event', async(req, res, next) => {
 });
 
 const getHikingData = async(lat, lng) => { 
-    const URL = `https://www.hikingproject.com/data/get-trails?lat=40.0274&lon=-105.2519&maxDistance=10&key=${process.env.HIKING_KEY}`;
+    const URL = `https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lng}&maxDistance=10&key=${process.env.HIKING_KEY}`;
     const hikeData = await request.get(URL);
-    const nearbyHikes = json.parse(hikeData.body);
+    const nearbyHikes = hikeData.body;
 
     return nearbyHikes.trails.map(hike => {
         return {
@@ -87,17 +87,22 @@ const getHikingData = async(lat, lng) => {
             star_votes: hike.star_votes,
             summary: hike.summary,
             trail_url: hike.url,
-            conditions: hike.conditionDetails
-            condition_date: hike.conditionDate
+            conditions: hike.conditionDetails,
+            condition_date: hike.conditionDate,
             condition_time: hike.conditionDate
         };
     });
 
 };
 
-
-
-
+app.get('/trails', async(req, res, next) => {
+    try {
+        let userHike = await getHikingData(lat, lng);
+        res.json(userHike); 
+    } catch (err) {
+        next(err);
+    }
+});
 
 app.get('*', (req, res) => res.send('404'));
 
