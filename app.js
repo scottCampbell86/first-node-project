@@ -48,6 +48,39 @@ app.get('/weather', async(req, res, next) => {
     }
 });
 
+const getEventData = async(lat, lng) => {
+    const URL = `http://api.eventful.com/json/events/search?app_key=${process.env.EVENTFUL_KEY}&where=${lat},${lng}&within=25&page_size=20&page_number=1`;
+    const eventData = await request.get(URL);
+    //JSON.parse(data.text) instead of data.body
+    const nearbyEvents = JSON.parse(eventData.text);
+
+    return nearbyEvents.events.event.map(event => {
+        return {
+            link : event.url,
+            name : event.title,
+            event_date : event.start_time,
+            summary : event.description,
+        };
+    });
+};
+
+app.get('/event', async(req, res, next) => {
+    try {
+        let userEvent = await getEventData(lat, lng);
+        res.json(userEvent); 
+    } catch (err) {
+        next(err);
+    }
+});
+
+
+
+
+
+
+
+
+
 app.get('*', (req, res) => res.send('404'));
 
 module.exports = {
