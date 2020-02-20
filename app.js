@@ -49,7 +49,6 @@ app.get('/weather', async(req, res, next) => {
 const getEventData = async(lat, lng) => {
     const URL = `http://api.eventful.com/json/events/search?app_key=${process.env.EVENTFUL_KEY}&where=${lat},${lng}&within=25&page_size=20&page_number=1`;
     const eventData = await request.get(URL);
-    //JSON.parse(data.text) instead of data.body
     const nearbyEvents = JSON.parse(eventData.text);
 
     return nearbyEvents.events.event.map(event => {
@@ -74,7 +73,6 @@ const getHikingData = async(lat, lng) => {
     const URL = `https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lng}&maxDistance=10&key=${process.env.HIKING_KEY}`;
     const hikeData = await request.get(URL);
     const nearbyHikes = hikeData.body.trails;
-    //const hikeKeys = Object.keys(nearbyHikes);
 
     return nearbyHikes.map(hike => {
         return {
@@ -90,13 +88,40 @@ const getHikingData = async(lat, lng) => {
             condition_time: new Date(nearbyHikes.time * 1000)
         };
     });
-
 };
-
 app.get('/trails', async(req, res, next) => {
     try {
-        let userHike = await getHikingData(lat, lng);
+        const userHike = await getHikingData(lat, lng);
         res.json(userHike);
+    } catch (err) {
+        next(err);
+    }
+});
+
+/// YELP
+const getYelpData = async(lat, lng) => {
+    const yelpData = await request
+        .get(`https://api.yelp.com/v3/businesses/search?term=restaurants&latitude=${lat}&longitude=${lng}`)
+        .set('Authorization', `Bearer ${process.env.YELP_KEY}`);
+    const nearbyYelpOptions = yelpData.body.businesses;
+
+    return nearbyYelpOptions.map(business => {
+        return {
+            name: business.name,
+            image_url: business.image_url,
+            price: '${business.price}',
+            rating: business.rating,
+            url: business.url
+        };
+    });
+};
+
+app.get('/yelp', async(req, res, next) => {
+    try {
+        console.log('hi');
+        const userYelp = await getYelpData(lat, lng);
+        
+        res.json(userYelp);
     } catch (err) {
         next(err);
     }
